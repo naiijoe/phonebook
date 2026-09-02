@@ -24,7 +24,7 @@
         </div>
         <div>
           <h1 class="text-base font-bold tracking-tight">สมุดโทรศัพท์ภายใน</h1>
-          <p class="text-[11px] text-slate-400">ค้นหาเบอร์โทรศัพท์และหน่วยงาน</p>
+          <p class="text-[11px] text-slate-400">กองเรือยุทธการ (กร.)</p>
         </div>
       </div>
       <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow flex items-center gap-1.5 active:scale-95 transition">
@@ -37,7 +37,7 @@
       <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar" id="categoryTabs">
         <button onclick="filterMainCategory('ALL')" class="cat-btn px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold whitespace-nowrap shadow-sm" data-cat="ALL">ทั้งหมด</button>
         <button onclick="filterMainCategory('สำนักงานผู้บังคับบัญชาใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="สำนักงานผู้บังคับบัญชาใน บก.กร.">สน.ผบช. ใน บก.กร.</button>
-        <button onclick="filterMainCategory('ฝ่ายอำนวยการใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="ฝ่ายอำนวยการใน บก.กร.">ฝอ. ใน บก.กร.</button>
+        <button onclick="filterMainCategory('ฝ่ายอำนวยการใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="ฝ่ายอำนวยการใน บก.กร.">ฝอ./กอง ใน บก.กร.</button>
         <button onclick="filterMainCategory('หน่วยขึ้นตรง กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="หน่วยขึ้นตรง กร.">นขต.กร.</button>
         <button onclick="filterMainCategory('หน่วยงานใน ทร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="หน่วยงานใน ทร.">หน่วยงานใน ทร.</button>
       </div>
@@ -51,7 +51,7 @@
           type="text" 
           id="searchInput" 
           oninput="handleSearch()"
-          placeholder="ค้นหาชื่อ, ตำแหน่ง, เบอร์มือถือ, เบอร์ภายใน 5 ตัว..." 
+          placeholder="ค้นหาชื่อ, ตำแหน่ง, เบอร์มือถือ, เบอร์ภายใน 5 ตัว, ออฟฟิศ..." 
           class="w-full pl-9 pr-8 py-2 bg-slate-800 text-white placeholder-slate-400 rounded-lg text-xs border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-slate-900 transition"
         >
         <button onclick="clearSearch()" id="clearBtn" class="absolute right-3 top-2.5 text-slate-400 hover:text-white hidden">
@@ -151,15 +151,80 @@
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZmF5cHlsd2FpaXpwcnByZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDE0ODIsImV4cCI6MjEwMzg3NzQ4Mn0.kUl8Y8LVnBNDVClMRhH_49nrYsXFI_BnRE0ATeU7ORI";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // กำหนดลำดับมาตรฐานของแต่ละ sub_office ใน กร.
+    const SUB_OFFICE_ORDER = [
+      // 1-7: สำนักงานผู้บังคับบัญชาใน บก.กร.
+      "สน.ผบ.กร.",
+      "สน.รอง ผบ.กร. (1)",
+      "สน.รอง ผบ.กร.(1)",
+      "สน.รอง ผบ.กร. (2)",
+      "สน.รอง ผบ.กร.(2)",
+      "สน.เสธ.กร.",
+      "สน.รอง เสธ.กร. (1)",
+      "สน.รอง เสธ.กร.(1)",
+      "สน.รอง เสธ.กร. (2)",
+      "สน.รอง เสธ.กร.(2)",
+      "นายพลเรือช่วยปฏิบัติราชการ",
+
+      // 8: กองต่าง ๆ ใน บก.กร.
+      "กพ.กร.",
+      "ขว.กร.",
+      "ยก.กร.",
+      "กบ.กร.",
+      "สสท.บก.กร.",
+      "กพร.บก.กร.",
+      "คป.กร.",
+      "กผช.กร.",
+      "ตส.กร.",
+      "กง.กร.",
+      "ธน.กร.",
+      "ธก.บก.กร.",
+      "ศปก.กร.",
+      "สวัสดิการ กร.",
+
+      // 9: นขต.กร.
+      "กตอ.กร.",
+      "กฟก.1 กร.",
+      "กฟก.2 กร.",
+      "กบฮ.กร.",
+      "กดน.กร.",
+      "กทบ.กร.",
+      "กยพ.กร.",
+      "กยฝ.กร.",
+      "กลน.กร.",
+      "กบร.กร.",
+      "นสร.กร.",
+      "กฝร.",
+      "กอง สน.กร."
+    ];
+
+    // ลำดับหน่วยงานหลัก (Main Categories)
+    const MAIN_CAT_ORDER = [
+      "สำนักงานผู้บังคับบัญชาใน บก.กร.",
+      "ฝ่ายอำนวยการใน บก.กร.",
+      "หน่วยขึ้นตรง กร.",
+      "หน่วยงานใน ทร."
+    ];
+
     let allContacts = [];
     let activeMainCategory = 'ALL';
+
+    function getSubOfficeRank(name) {
+      const cleanName = (name || '').trim();
+      const index = SUB_OFFICE_ORDER.indexOf(cleanName);
+      return index !== -1 ? index : 999;
+    }
+
+    function getMainCatRank(name) {
+      const cleanName = (name || '').trim();
+      const index = MAIN_CAT_ORDER.indexOf(cleanName);
+      return index !== -1 ? index : 999;
+    }
 
     async function fetchContacts() {
       const { data, error } = await client
         .from('contacts')
-        .select('*')
-        .order('sub_office', { ascending: true })
-        .order('rank_order', { ascending: true, nullsFirst: false });
+        .select('*');
 
       document.getElementById('loading').classList.add('hidden');
 
@@ -220,22 +285,34 @@
       }
       emptyState.classList.add('hidden');
 
+      // จัดกลุ่มข้อมูล
       const groups = {};
       filtered.forEach(item => {
         const mainCat = item.category || 'หน่วยงานทั่วไป';
-        const subCat = item.sub_office || 'ส่วนกลาง';
+        const subCat = (item.sub_office || 'ส่วนกลาง').trim();
         if (!groups[mainCat]) groups[mainCat] = {};
         if (!groups[mainCat][subCat]) groups[mainCat][subCat] = [];
         groups[mainCat][subCat].push(item);
       });
 
-      for (const [mainCat, subOffices] of Object.entries(groups)) {
+      // เรียงลำดับหน่วยงานหลัก (Main Categories)
+      const sortedMainCats = Object.keys(groups).sort((a, b) => getMainCatRank(a) - getMainCatRank(b));
+
+      sortedMainCats.forEach(mainCat => {
+        const subOffices = groups[mainCat];
         const mainCard = document.createElement('div');
         mainCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
         
         let subHtml = '';
-        for (const [subCat, members] of Object.entries(subOffices)) {
+
+        // เรียงลำดับหน่วยงานย่อย (sub_office) ตามลิสต์มาตรฐานที่กำหนด
+        const sortedSubCats = Object.keys(subOffices).sort((a, b) => getSubOfficeRank(a) - getSubOfficeRank(b));
+
+        sortedSubCats.forEach(subCat => {
+          const members = subOffices[subCat];
           let memberRows = '';
+          
+          // เรียงรายชื่อคนในหน่วยตาม rank_order (1, 2, 3...)
           members.sort((a, b) => (Number(a.rank_order) || 999) - (Number(b.rank_order) || 999));
 
           members.forEach(member => {
@@ -260,7 +337,7 @@
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
                   ${member.phone ? `
-                    <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 transition" title="โทรออกมือถือ">
+                    <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 shadow-xs transition" title="โทรออกมือถือ">
                       <i class="fa-solid fa-phone text-xs"></i>
                     </a>
                   ` : ''}
@@ -289,7 +366,7 @@
               </div>
             </details>
           `;
-        }
+        });
 
         mainCard.innerHTML = `
           <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
@@ -300,7 +377,7 @@
           <div>${subHtml}</div>
         `;
         container.appendChild(mainCard);
-      }
+      });
     }
 
     function toggleModal(show) {
