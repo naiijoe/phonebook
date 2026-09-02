@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>สมุดหมายเลขโทรศัพท์</title>
+  <title>ทำเนียบหมายเลขโทรศัพท์</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -63,18 +63,19 @@
 
   <!-- Content -->
   <main class="max-w-2xl mx-auto px-3 mt-3">
-    <!-- State Indicators -->
+    <!-- Loading Indicator -->
     <div id="loading" class="text-center py-16 text-slate-400">
       <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-600"></i>
       <p class="text-xs">กำลังดึงข้อมูลทำเนียบเบอร์...</p>
     </div>
 
+    <!-- Empty State -->
     <div id="emptyState" class="text-center py-16 text-slate-400 hidden">
       <i class="fa-regular fa-id-badge text-4xl mb-2 text-slate-300"></i>
       <p class="text-sm font-medium">ไม่พบข้อมูลที่ค้นหา</p>
     </div>
 
-    <!-- รายการกลุ่มหน่วยงาน -->
+    <!-- Grouped Content Container -->
     <div id="groupedContent" class="space-y-4"></div>
   </main>
 
@@ -102,10 +103,17 @@
           </select>
         </div>
 
-        <!-- หน่วยย่อย -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงานย่อย / แผนก / ฝ่าย *</label>
-          <input type="text" id="sub_office" required placeholder="เช่น สำนักงาน ผบ.กร. หรือ ยก.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        <div class="grid grid-cols-3 gap-2">
+          <!-- หน่วยย่อย -->
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงานย่อย / แผนก *</label>
+            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ยก.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <!-- ลำดับ rank_order -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ลำดับ (ตัวเลข)</label>
+            <input type="number" id="rank_order" value="1" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
         </div>
 
         <!-- ยศ-ชื่อ-นามสกุล -->
@@ -128,7 +136,7 @@
           </div>
           <!-- เบอร์ ทร. 5 ตัว -->
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์ภายใน ทร. (5 ตัว)</label>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์ ทร. (5 ตัว)</label>
             <input type="text" id="internal_phone" placeholder="7xxxx" maxlength="10" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
         </div>
@@ -156,10 +164,12 @@
     let activeMainCategory = 'ALL';
 
     async function fetchContacts() {
+      // เรียงตาม sub_office และตามด้วย rank_order
       const { data, error } = await client
         .from('contacts')
         .select('*')
-        .order('id', { ascending: true });
+        .order('sub_office', { ascending: true })
+        .order('rank_order', { ascending: true, nullsFirst: false });
 
       document.getElementById('loading').classList.add('hidden');
 
@@ -175,7 +185,6 @@
     function filterMainCategory(cat) {
       activeMainCategory = cat;
       
-      // Update Tab Styles
       document.querySelectorAll('.cat-btn').forEach(btn => {
         if (btn.dataset.cat === cat) {
           btn.className = "cat-btn px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold whitespace-nowrap shadow-sm";
@@ -205,7 +214,6 @@
       const emptyState = document.getElementById('emptyState');
       container.innerHTML = '';
 
-      // กรองข้อมูลตาม Tab และช่อง Search
       const filtered = allContacts.filter(item => {
         const matchCat = (activeMainCategory === 'ALL') || (item.category === activeMainCategory);
         const matchQuery = !q || 
@@ -224,7 +232,7 @@
       }
       emptyState.classList.add('hidden');
 
-      // จัดกลุ่ม: category -> sub_office
+      // จัดกลุ่มตาม category และ sub_office โดยรักษาลำดับ rank_order
       const groups = {};
       filtered.forEach(item => {
         const mainCat = item.category || 'หน่วยงานทั่วไป';
@@ -235,7 +243,6 @@
         groups[mainCat][subCat].push(item);
       });
 
-      // Render ทีละกลุ่ม
       for (const [mainCat, subOffices] of Object.entries(groups)) {
         const mainCard = document.createElement('div');
         mainCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
@@ -243,6 +250,10 @@
         let subHtml = '';
         for (const [subCat, members] of Object.entries(subOffices)) {
           let memberRows = '';
+          
+          // เรียงซ้ำอีกครั้งเพื่อความแม่นยำ
+          members.sort((a, b) => (Number(a.rank_order) || 999) - (Number(b.rank_order) || 999));
+
           members.forEach(member => {
             const avatarHtml = member.avatar_url 
               ? `<img src="${member.avatar_url}" class="w-11 h-11 rounded-full object-cover border border-slate-200 shrink-0">`
@@ -255,7 +266,9 @@
                 <div class="flex items-center gap-3 min-w-0">
                   ${avatarHtml}
                   <div class="min-w-0">
-                    <h4 class="font-bold text-xs sm:text-sm text-slate-800 truncate">${member.name}</h4>
+                    <div class="flex items-center gap-1.5">
+                      <h4 class="font-bold text-xs sm:text-sm text-slate-800 truncate">${member.name}</h4>
+                    </div>
                     <p class="text-[11px] text-indigo-700 font-medium truncate">${member.position || '-'}</p>
                     <div class="flex flex-wrap gap-2 text-[11px] mt-1 text-slate-600">
                       ${member.phone ? `<span class="inline-flex items-center gap-1"><i class="fa-solid fa-mobile-screen text-slate-400"></i> ${member.phone}</span>` : ''}
@@ -323,6 +336,7 @@
 
       const category = document.getElementById('category').value;
       const sub_office = document.getElementById('sub_office').value.trim();
+      const rank_order = parseInt(document.getElementById('rank_order').value) || 1;
       const name = document.getElementById('name').value.trim();
       const position = document.getElementById('position').value.trim();
       const phone = document.getElementById('phone').value.trim();
@@ -332,6 +346,7 @@
       const { error } = await client.from('contacts').insert([{
         category,
         sub_office,
+        rank_order,
         name,
         position,
         phone,
