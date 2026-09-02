@@ -27,12 +27,12 @@
           <p class="text-[11px] text-slate-400">ค้นหาเบอร์โทรศัพท์และหน่วยงาน</p>
         </div>
       </div>
-      <button onclick="toggleModal(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow flex items-center gap-1.5 active:scale-95 transition">
+      <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow flex items-center gap-1.5 active:scale-95 transition">
         <i class="fa-solid fa-user-plus"></i> เพิ่มข้อมูล
       </button>
     </div>
 
-    <!-- Filter Tabs (หน่วยงานหลัก) -->
+    <!-- Filter Tabs -->
     <div class="max-w-2xl mx-auto px-4 pt-1 pb-2">
       <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar" id="categoryTabs">
         <button onclick="filterMainCategory('ALL')" class="cat-btn px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold whitespace-nowrap shadow-sm" data-cat="ALL">ทั้งหมด</button>
@@ -63,28 +63,25 @@
 
   <!-- Content -->
   <main class="max-w-2xl mx-auto px-3 mt-3">
-    <!-- Loading Indicator -->
     <div id="loading" class="text-center py-16 text-slate-400">
       <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-600"></i>
       <p class="text-xs">กำลังดึงข้อมูลทำเนียบเบอร์...</p>
     </div>
 
-    <!-- Empty State -->
     <div id="emptyState" class="text-center py-16 text-slate-400 hidden">
       <i class="fa-regular fa-id-badge text-4xl mb-2 text-slate-300"></i>
       <p class="text-sm font-medium">ไม่พบข้อมูลที่ค้นหา</p>
     </div>
 
-    <!-- Grouped Content Container -->
     <div id="groupedContent" class="space-y-4"></div>
   </main>
 
-  <!-- Modal สำหรับเพิ่มรายชื่อ -->
+  <!-- Modal สำหรับเพิ่ม / แก้ไขรายชื่อ -->
   <div id="modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
     <div class="bg-white w-full max-w-md rounded-2xl p-5 shadow-2xl max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-user-plus text-indigo-600"></i> เพิ่มข้อมูลกำลังพล
+        <h3 id="modalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-user-pen text-indigo-600"></i> จัดการข้อมูลกำลังพล
         </h3>
         <button onclick="toggleModal(false)" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -92,7 +89,8 @@
       </div>
 
       <form id="contactForm" onsubmit="saveContact(event)" class="space-y-3">
-        <!-- หน่วยงานหลัก -->
+        <input type="hidden" id="edit_id" value="">
+
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">กลุ่มหน่วยงานหลัก *</label>
           <select id="category" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -104,44 +102,37 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2">
-          <!-- หน่วยย่อย -->
           <div class="col-span-2">
             <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงานย่อย / แผนก *</label>
             <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ยก.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
-          <!-- ลำดับ rank_order -->
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">ลำดับ (ตัวเลข)</label>
             <input type="number" id="rank_order" value="1" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
         </div>
 
-        <!-- ยศ-ชื่อ-นามสกุล -->
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">ยศ - ชื่อ - นามสกุล *</label>
           <input type="text" id="name" required placeholder="เช่น พล.ร.อ. สมชาย ใจดี" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
-        <!-- ตำแหน่ง -->
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">ตำแหน่ง</label>
           <input type="text" id="position" placeholder="เช่น ผบ.กร., ประจำแผนก..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
-          <!-- เบอร์มือถือ -->
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์มือถือ</label>
             <input type="tel" id="phone" placeholder="08xxxxxxxx" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
-          <!-- เบอร์ ทร. 5 ตัว -->
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์ ทร. (5 ตัว)</label>
             <input type="text" id="internal_phone" placeholder="7xxxx" maxlength="10" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
         </div>
 
-        <!-- ลิงก์รูปภาพ -->
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">URL รูปภาพ (ถ้ามี)</label>
           <input type="url" id="avatar_url" placeholder="https://..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -164,7 +155,6 @@
     let activeMainCategory = 'ALL';
 
     async function fetchContacts() {
-      // เรียงตาม sub_office และตามด้วย rank_order
       const { data, error } = await client
         .from('contacts')
         .select('*')
@@ -184,7 +174,6 @@
 
     function filterMainCategory(cat) {
       activeMainCategory = cat;
-      
       document.querySelectorAll('.cat-btn').forEach(btn => {
         if (btn.dataset.cat === cat) {
           btn.className = "cat-btn px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold whitespace-nowrap shadow-sm";
@@ -192,7 +181,6 @@
           btn.className = "cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap";
         }
       });
-
       renderData();
     }
 
@@ -232,12 +220,10 @@
       }
       emptyState.classList.add('hidden');
 
-      // จัดกลุ่มตาม category และ sub_office โดยรักษาลำดับ rank_order
       const groups = {};
       filtered.forEach(item => {
         const mainCat = item.category || 'หน่วยงานทั่วไป';
         const subCat = item.sub_office || 'ส่วนกลาง';
-
         if (!groups[mainCat]) groups[mainCat] = {};
         if (!groups[mainCat][subCat]) groups[mainCat][subCat] = [];
         groups[mainCat][subCat].push(item);
@@ -250,8 +236,6 @@
         let subHtml = '';
         for (const [subCat, members] of Object.entries(subOffices)) {
           let memberRows = '';
-          
-          // เรียงซ้ำอีกครั้งเพื่อความแม่นยำ
           members.sort((a, b) => (Number(a.rank_order) || 999) - (Number(b.rank_order) || 999));
 
           members.forEach(member => {
@@ -266,9 +250,7 @@
                 <div class="flex items-center gap-3 min-w-0">
                   ${avatarHtml}
                   <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                      <h4 class="font-bold text-xs sm:text-sm text-slate-800 truncate">${member.name}</h4>
-                    </div>
+                    <h4 class="font-bold text-xs sm:text-sm text-slate-800 truncate">${member.name}</h4>
                     <p class="text-[11px] text-indigo-700 font-medium truncate">${member.position || '-'}</p>
                     <div class="flex flex-wrap gap-2 text-[11px] mt-1 text-slate-600">
                       ${member.phone ? `<span class="inline-flex items-center gap-1"><i class="fa-solid fa-mobile-screen text-slate-400"></i> ${member.phone}</span>` : ''}
@@ -276,13 +258,16 @@
                     </div>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
+                <div class="flex items-center gap-1 shrink-0">
                   ${member.phone ? `
-                    <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 shadow-xs transition" title="โทรออกมือถือ">
+                    <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 transition" title="โทรออกมือถือ">
                       <i class="fa-solid fa-phone text-xs"></i>
                     </a>
                   ` : ''}
-                  <button onclick="deleteContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-300 hover:text-rose-500 flex items-center justify-center transition" title="ลบ">
+                  <button onclick="editContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition" title="แก้ไข">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                  </button>
+                  <button onclick="deleteContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition" title="ลบ">
                     <i class="fa-regular fa-trash-can text-xs"></i>
                   </button>
                 </div>
@@ -325,40 +310,70 @@
       } else {
         modal.classList.add('hidden');
         document.getElementById('contactForm').reset();
+        document.getElementById('edit_id').value = '';
       }
+    }
+
+    function openAddModal() {
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus text-indigo-600"></i> เพิ่มข้อมูลกำลังพล';
+      document.getElementById('saveBtn').innerText = 'บันทึกข้อมูล';
+      document.getElementById('contactForm').reset();
+      document.getElementById('edit_id').value = '';
+      document.getElementById('rank_order').value = 1;
+      toggleModal(true);
+    }
+
+    function editContact(id) {
+      const contact = allContacts.find(c => c.id === id);
+      if (!contact) return;
+
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen text-indigo-600"></i> แก้ไขข้อมูลกำลังพล';
+      document.getElementById('saveBtn').innerText = 'อัปเดตข้อมูล';
+
+      document.getElementById('edit_id').value = contact.id;
+      document.getElementById('category').value = contact.category || 'สำนักงานผู้บังคับบัญชาใน บก.กร.';
+      document.getElementById('sub_office').value = contact.sub_office || '';
+      document.getElementById('rank_order').value = contact.rank_order || 1;
+      document.getElementById('name').value = contact.name || '';
+      document.getElementById('position').value = contact.position || '';
+      document.getElementById('phone').value = contact.phone || '';
+      document.getElementById('internal_phone').value = contact.internal_phone || '';
+      document.getElementById('avatar_url').value = contact.avatar_url || '';
+
+      toggleModal(true);
     }
 
     async function saveContact(e) {
       e.preventDefault();
       const saveBtn = document.getElementById('saveBtn');
+      const editId = document.getElementById('edit_id').value;
+
       saveBtn.disabled = true;
-      saveBtn.innerText = 'กำลังบันทึก...';
+      saveBtn.innerText = editId ? 'กำลังอัปเดต...' : 'กำลังบันทึก...';
 
-      const category = document.getElementById('category').value;
-      const sub_office = document.getElementById('sub_office').value.trim();
-      const rank_order = parseInt(document.getElementById('rank_order').value) || 1;
-      const name = document.getElementById('name').value.trim();
-      const position = document.getElementById('position').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const internal_phone = document.getElementById('internal_phone').value.trim();
-      const avatar_url = document.getElementById('avatar_url').value.trim();
+      const payload = {
+        category: document.getElementById('category').value,
+        sub_office: document.getElementById('sub_office').value.trim(),
+        rank_order: parseInt(document.getElementById('rank_order').value) || 1,
+        name: document.getElementById('name').value.trim(),
+        position: document.getElementById('position').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        internal_phone: document.getElementById('internal_phone').value.trim(),
+        avatar_url: document.getElementById('avatar_url').value.trim() || null
+      };
 
-      const { error } = await client.from('contacts').insert([{
-        category,
-        sub_office,
-        rank_order,
-        name,
-        position,
-        phone,
-        internal_phone,
-        avatar_url: avatar_url || null
-      }]);
+      let result;
+      if (editId) {
+        result = await client.from('contacts').update(payload).eq('id', editId);
+      } else {
+        result = await client.from('contacts').insert([payload]);
+      }
 
       saveBtn.disabled = false;
-      saveBtn.innerText = 'บันทึกข้อมูล';
+      saveBtn.innerText = editId ? 'อัปเดตข้อมูล' : 'บันทึกข้อมูล';
 
-      if (error) {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
+      if (result.error) {
+        alert('เกิดข้อผิดพลาด: ' + result.error.message);
       } else {
         toggleModal(false);
         fetchContacts();
