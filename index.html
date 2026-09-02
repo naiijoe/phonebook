@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ทำเนียบหมายเลขโทรศัพท์</title>
+  <title>ทำเนียบหมายเลขโทรศัพท์ กองเรือยุทธการ</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,7 +24,7 @@
             <i class="fa-solid fa-phone-volume text-sm"></i>
           </div>
           <div>
-            <h1 class="text-base font-bold tracking-tight">สมุดโทรศัพท์</h1>
+            <h1 class="text-base font-bold tracking-tight">สมุดโทรศัพท์ภายใน</h1>
             <p class="text-[11px] text-slate-400">กองเรือยุทธการ (กร.)</p>
           </div>
         </div>
@@ -65,15 +65,25 @@
     <!-- Main Body Area -->
     <main class="max-w-2xl mx-auto px-3 mt-4">
       
-      <!-- หน้าต่างแรกเริ่ม (Default Prompt) -->
-      <div id="initialState" class="text-center py-20 px-4">
-        <div class="w-16 h-16 bg-slate-200 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-          <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+      <!-- หน้าต่างแรกเริ่ม: แสดงภาพหน้าปกสมุดโทรศัพท์ -->
+      <div id="initialState" class="py-4 px-2 flex flex-col items-center animate-fade-in">
+        <div class="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+          <img 
+            src="cover.jpg" 
+            alt="หน้าปกสมุดโทรศัพท์ กองเรือยุทธการ" 
+            class="w-full h-auto object-cover block"
+            onerror="this.style.display='none'; document.getElementById('coverFallback').classList.remove('hidden');"
+          >
+          <div id="coverFallback" class="hidden p-8 text-center bg-slate-50">
+            <i class="fa-solid fa-book-bookmark text-4xl text-indigo-600 mb-2"></i>
+            <p class="text-sm font-bold text-slate-700">สมุดโทรศัพท์ กองเรือยุทธการ</p>
+          </div>
+          <div class="p-3 text-center bg-slate-50 border-t border-slate-100">
+            <p class="text-xs text-slate-500 font-medium">
+              <i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> พิมพ์คำค้นหาด้านบนเพื่อค้นหารายชื่อและหมายเลขโทรศัพท์
+            </p>
+          </div>
         </div>
-        <h3 class="text-base font-bold text-slate-700">ค้นหาเบอร์โทรศัพท์</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-          พิมพ์ชื่อ, สกุล, ตำแหน่ง, เบอร์โทร 5 ตัว หรือชื่อหน่วยงานในช่องค้นหาด้านบนเพื่อแสดงผล
-        </p>
       </div>
 
       <!-- ข้อความเมื่อค้นไม่พบ -->
@@ -305,13 +315,14 @@
       const initialState = document.getElementById('initialState');
       container.innerHTML = '';
 
-      // ถ้ายังไม่มีการพิมพ์ค้นหา ให้แสดงหน้าจอเริ่มต้นค้นหาอย่างเดียว
+      // ถ้ายังไม่ได้พิมพ์ค้นหา ให้แสดงหน้าปก
       if (!q) {
         initialState.classList.remove('hidden');
         emptyState.classList.add('hidden');
         return;
       }
 
+      // เมื่อเริ่มพิมพ์ ให้ซ่อนหน้าปกและแสดงผลการค้นหา
       initialState.classList.add('hidden');
 
       const filtered = allContacts.filter(item => {
