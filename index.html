@@ -27,16 +27,26 @@
           <p class="text-[11px] text-slate-400">กองเรือยุทธการ (กร.)</p>
         </div>
       </div>
-      <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow flex items-center gap-1.5 active:scale-95 transition">
-        <i class="fa-solid fa-user-plus"></i> เพิ่มข้อมูล
-      </button>
+      
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <!-- ปุ่มเพิ่มข้อมูล (แสดงเฉพาะ Admin) -->
+        <button id="addBtn" onclick="openAddModal()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow flex items-center gap-1.5 active:scale-95 transition">
+          <i class="fa-solid fa-user-plus"></i> เพิ่มข้อมูล
+        </button>
+
+        <!-- ปุ่มกุญแจสำหรับ Admin Login / Logout -->
+        <button id="authBtn" onclick="handleAuthClick()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 flex items-center justify-center transition border border-slate-700 shadow-sm" title="โหมดจัดการข้อมูล">
+          <i class="fa-solid fa-lock text-xs" id="authIcon"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Filter Tabs -->
     <div class="max-w-2xl mx-auto px-4 pt-1 pb-2">
       <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar" id="categoryTabs">
         <button onclick="filterMainCategory('ALL')" class="cat-btn px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold whitespace-nowrap shadow-sm" data-cat="ALL">ทั้งหมด</button>
-        <button onclick="filterMainCategory('สำนักงานผู้บังคับบัญชาใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="สำนักงานผู้บังคับบัญชาใน บก.กร.">สน.ผู้บังคับบัญชาใน บก.กร.</button>
+        <button onclick="filterMainCategory('สำนักงานผู้บังคับบัญชาใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="สำนักงานผู้บังคับบัญชาใน บก.กร.">สน.ผบช. ใน บก.กร.</button>
         <button onclick="filterMainCategory('ฝ่ายอำนวยการใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="ฝ่ายอำนวยการใน บก.กร.">ฝอ./กอง ใน บก.กร.</button>
         <button onclick="filterMainCategory('หน่วยขึ้นตรง กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="หน่วยขึ้นตรง กร.">นขต.กร.</button>
         <button onclick="filterMainCategory('หน่วยงานใน ทร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="หน่วยงานใน ทร.">หน่วยงานใน ทร.</button>
@@ -104,7 +114,7 @@
         <div class="grid grid-cols-3 gap-2">
           <div class="col-span-2">
             <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงานย่อย / แผนก *</label>
-            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ยก.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ฝสธ.ประจำ ผบ.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">ลำดับ (ตัวเลข)</label>
@@ -151,7 +161,10 @@
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZmF5cHlsd2FpaXpwcnByZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDE0ODIsImV4cCI6MjEwMzg3NzQ4Mn0.kUl8Y8LVnBNDVClMRhH_49nrYsXFI_BnRE0ATeU7ORI";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // กำหนดลำดับมาตรฐานของแต่ละ sub_office ใน กร.
+    // รหัสผ่านสำหรับ Admin (แก้ไขรหัสผ่านตรงนี้ได้)
+    const ADMIN_PIN = "1234";
+    let isAdmin = sessionStorage.getItem("admin_authenticated") === "true";
+
     const SUB_OFFICE_ORDER = [
       "สน.ผบ.กร.",
       "ฝสธ.ประจำ ผบ.กร.",
@@ -205,6 +218,47 @@
 
     let allContacts = [];
     let activeMainCategory = 'ALL';
+
+    function updateAuthUI() {
+      const addBtn = document.getElementById('addBtn');
+      const authIcon = document.getElementById('authIcon');
+      const authBtn = document.getElementById('authBtn');
+
+      if (isAdmin) {
+        addBtn.classList.remove('hidden');
+        authIcon.className = 'fa-solid fa-lock-open text-xs text-amber-400';
+        authBtn.classList.add('border-amber-400');
+        authBtn.title = "ออกจากโหมดจัดการ (ล็อกเอาท์)";
+      } else {
+        addBtn.classList.add('hidden');
+        authIcon.className = 'fa-solid fa-lock text-xs text-slate-300';
+        authBtn.classList.remove('border-amber-400');
+        authBtn.title = "เข้าสู่โหมดจัดการข้อมูล (ใส่รหัสผ่าน)";
+      }
+    }
+
+    function handleAuthClick() {
+      if (isAdmin) {
+        if (confirm("ต้องการออกจากโหมดจัดการข้อมูลใช่หรือไม่?")) {
+          isAdmin = false;
+          sessionStorage.removeItem("admin_authenticated");
+          updateAuthUI();
+          renderData();
+        }
+      } else {
+        const input = prompt("กรุณาใส่รหัสผ่านสำหรับจัดการข้อมูล:");
+        if (input === null) return;
+        if (input.trim() === ADMIN_PIN) {
+          isAdmin = true;
+          sessionStorage.setItem("admin_authenticated", "true");
+          alert("เข้าสู่โหมดจัดการข้อมูลสำเร็จ");
+          updateAuthUI();
+          renderData();
+        } else {
+          alert("รหัสผ่านไม่ถูกต้อง");
+        }
+      }
+    }
 
     function getSubOfficeRank(name) {
       const cleanName = (name || '').trim();
@@ -282,7 +336,6 @@
       }
       emptyState.classList.add('hidden');
 
-      // แยกกลุ่มข้อมูลตาม Category และ Sub-office
       const groups = {};
       filtered.forEach(item => {
         const mainCat = item.category || 'หน่วยงานทั่วไป';
@@ -296,8 +349,6 @@
 
       sortedMainCats.forEach(mainCat => {
         const subOffices = groups[mainCat];
-        
-        // Header หมวดหมู่หลักแบบเรียบหรู
         const mainSection = document.createElement('div');
         mainSection.className = "space-y-3";
         
@@ -309,7 +360,6 @@
         `;
         mainSection.appendChild(mainTitle);
 
-        // จัดเรียง sub_office และสร้างกล่องแยกรายหน่วย
         const sortedSubCats = Object.keys(subOffices).sort((a, b) => getSubOfficeRank(a) - getSubOfficeRank(b));
 
         sortedSubCats.forEach(subCat => {
@@ -323,6 +373,16 @@
               : `<div class="w-11 h-11 rounded-full bg-slate-100 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0 border border-slate-200">
                   <i class="fa-solid fa-user-shield text-base"></i>
                  </div>`;
+
+            // แสดงปุ่มแก้ไขและลบเฉพาะตอนเป็น Admin
+            const adminButtonsHtml = isAdmin ? `
+              <button onclick="editContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition" title="แก้ไข">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+              <button onclick="deleteContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition" title="ลบ">
+                <i class="fa-regular fa-trash-can text-xs"></i>
+              </button>
+            ` : '';
 
             memberRows += `
               <div class="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 transition">
@@ -343,18 +403,12 @@
                       <i class="fa-solid fa-phone text-xs"></i>
                     </a>
                   ` : ''}
-                  <button onclick="editContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition" title="แก้ไข">
-                    <i class="fa-solid fa-pen text-xs"></i>
-                  </button>
-                  <button onclick="deleteContact(${member.id})" class="w-8 h-8 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition" title="ลบ">
-                    <i class="fa-regular fa-trash-can text-xs"></i>
-                  </button>
+                  ${adminButtonsHtml}
                 </div>
               </div>
             `;
           });
 
-          // กล่องการ์ดแยกของแต่ละ sub_office ชัดเจน
           const subCard = document.createElement('div');
           subCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
           subCard.innerHTML = `
@@ -391,6 +445,10 @@
     }
 
     function openAddModal() {
+      if (!isAdmin) {
+        alert("คุณไม่มีสิทธิ์เพิ่มข้อมูล");
+        return;
+      }
       document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus text-indigo-600"></i> เพิ่มข้อมูลกำลังพล';
       document.getElementById('saveBtn').innerText = 'บันทึกข้อมูล';
       document.getElementById('contactForm').reset();
@@ -400,6 +458,10 @@
     }
 
     function editContact(id) {
+      if (!isAdmin) {
+        alert("คุณไม่มีสิทธิ์แก้ไขข้อมูล");
+        return;
+      }
       const contact = allContacts.find(c => c.id === id);
       if (!contact) return;
 
@@ -421,6 +483,11 @@
 
     async function saveContact(e) {
       e.preventDefault();
+      if (!isAdmin) {
+        alert("คุณไม่มีสิทธิ์บันทึกข้อมูล");
+        return;
+      }
+
       const saveBtn = document.getElementById('saveBtn');
       const editId = document.getElementById('edit_id').value;
 
@@ -457,6 +524,10 @@
     }
 
     async function deleteContact(id) {
+      if (!isAdmin) {
+        alert("คุณไม่มีสิทธิ์ลบข้อมูล");
+        return;
+      }
       if (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
         const { error } = await client.from('contacts').delete().eq('id', id);
         if (error) {
@@ -467,6 +538,8 @@
       }
     }
 
+    // เริ่มต้นระบบ
+    updateAuthUI();
     fetchContacts();
   </script>
 </body>
