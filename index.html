@@ -36,8 +36,8 @@
     <div class="max-w-2xl mx-auto px-4 pt-1 pb-2">
       <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar" id="categoryTabs">
         <button onclick="filterMainCategory('ALL')" class="cat-btn px-3 py-1.5 rounded-full bg-white text-slate-900 font-semibold whitespace-nowrap shadow-sm" data-cat="ALL">ทั้งหมด</button>
-        <button onclick="filterMainCategory('สำนักงานผู้บังคับบัญชาใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="สำนักงานผู้บังคับบัญชาใน บก.กร.">สน.ผู้บังคับบัญชาใน บก.กร.</button>
-        <button onclick="filterMainCategory('ฝ่ายอำนวยการใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="ฝ่ายอำนวยการใน บก.กร.">ฝอ./กองต่าง ๆ ใน บก.กร.</button>
+        <button onclick="filterMainCategory('สำนักงานผู้บังคับบัญชาใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="สำนักงานผู้บังคับบัญชาใน บก.กร.">สน.ผบช. ใน บก.กร.</button>
+        <button onclick="filterMainCategory('ฝ่ายอำนวยการใน บก.กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="ฝ่ายอำนวยการใน บก.กร.">ฝอ./กอง ใน บก.กร.</button>
         <button onclick="filterMainCategory('หน่วยขึ้นตรง กร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="หน่วยขึ้นตรง กร.">นขต.กร.</button>
         <button onclick="filterMainCategory('หน่วยงานใน ทร.')" class="cat-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap" data-cat="หน่วยงานใน ทร.">หน่วยงานใน ทร.</button>
       </div>
@@ -51,7 +51,7 @@
           type="text" 
           id="searchInput" 
           oninput="handleSearch()"
-          placeholder="ค้นหาชื่อ, ตำแหน่ง, เบอร์มือถือ, เบอร์ภายใน 5 ตัว, ออฟฟิศ..." 
+          placeholder="ค้นหาชื่อ, ตำแหน่ง, เบอร์มือถือ, เบอร์ภายใน 5 ตัว, หน่วยงาน..." 
           class="w-full pl-9 pr-8 py-2 bg-slate-800 text-white placeholder-slate-400 rounded-lg text-xs border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-slate-900 transition"
         >
         <button onclick="clearSearch()" id="clearBtn" class="absolute right-3 top-2.5 text-slate-400 hover:text-white hidden">
@@ -62,7 +62,7 @@
   </header>
 
   <!-- Content -->
-  <main class="max-w-2xl mx-auto px-3 mt-3">
+  <main class="max-w-2xl mx-auto px-3 mt-4">
     <div id="loading" class="text-center py-16 text-slate-400">
       <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-600"></i>
       <p class="text-xs">กำลังดึงข้อมูลทำเนียบเบอร์...</p>
@@ -73,7 +73,7 @@
       <p class="text-sm font-medium">ไม่พบข้อมูลที่ค้นหา</p>
     </div>
 
-    <div id="groupedContent" class="space-y-4"></div>
+    <div id="groupedContent" class="space-y-6"></div>
   </main>
 
   <!-- Modal สำหรับเพิ่ม / แก้ไขรายชื่อ -->
@@ -104,7 +104,7 @@
         <div class="grid grid-cols-3 gap-2">
           <div class="col-span-2">
             <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงานย่อย / แผนก *</label>
-            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ฝสธ.ประจำ ผบ.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ยก.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">ลำดับ (ตัวเลข)</label>
@@ -151,30 +151,21 @@
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZmF5cHlsd2FpaXpwcnByZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDE0ODIsImV4cCI6MjEwMzg3NzQ4Mn0.kUl8Y8LVnBNDVClMRhH_49nrYsXFI_BnRE0ATeU7ORI";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // กำหนดลำดับมาตรฐานของแต่ละ sub_office ใน กร. (รวม 1-10 ตามที่ระบุ)
+    // กำหนดลำดับมาตรฐานของแต่ละ sub_office ใน กร.
     const SUB_OFFICE_ORDER = [
-      // 1. สน.ผบ.กร.
       "สน.ผบ.กร.",
-      // 2. ฝสธ.ประจำ ผบ.กร.
       "ฝสธ.ประจำ ผบ.กร.",
-      // 3. สน.รอง ผบ.กร. (1)
       "สน.รอง ผบ.กร. (1)",
       "สน.รอง ผบ.กร.(1)",
-      // 4. สน.รอง ผบ.กร.(2)
       "สน.รอง ผบ.กร. (2)",
       "สน.รอง ผบ.กร.(2)",
-      // 5. สน.เสธ.กร.
       "สน.เสธ.กร.",
-      // 6. สน.รอง เสธ.กร. (1)
       "สน.รอง เสธ.กร. (1)",
       "สน.รอง เสธ.กร.(1)",
-      // 7. สน.รอง เสธ.กร. (2)
       "สน.รอง เสธ.กร. (2)",
       "สน.รอง เสธ.กร.(2)",
-      // 8. นายพลเรือช่วยปฏิบัติราชการ
       "นายพลเรือช่วยปฏิบัติราชการ",
 
-      // 9. กองต่าง ๆ ใน บก.กร.
       "กพ.กร.",
       "ขว.กร.",
       "ยก.กร.",
@@ -190,7 +181,6 @@
       "ศปก.กร.",
       "สวัสดิการ กร.",
 
-      // 10. นขต.กร.
       "กตอ.กร.",
       "กฟก.1 กร.",
       "กฟก.2 กร.",
@@ -292,6 +282,7 @@
       }
       emptyState.classList.add('hidden');
 
+      // แยกกลุ่มข้อมูลตาม Category และ Sub-office
       const groups = {};
       filtered.forEach(item => {
         const mainCat = item.category || 'หน่วยงานทั่วไป';
@@ -305,18 +296,27 @@
 
       sortedMainCats.forEach(mainCat => {
         const subOffices = groups[mainCat];
-        const mainCard = document.createElement('div');
-        mainCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
         
-        let subHtml = '';
+        // Header หมวดหมู่หลักแบบเรียบหรู
+        const mainSection = document.createElement('div');
+        mainSection.className = "space-y-3";
+        
+        const mainTitle = document.createElement('div');
+        mainTitle.className = "flex items-center gap-2 px-1 pt-2 pb-1 border-b-2 border-slate-300 text-slate-800";
+        mainTitle.innerHTML = `
+          <i class="fa-solid fa-shield-halved text-indigo-700 text-sm"></i>
+          <h2 class="text-sm font-extrabold tracking-wide uppercase">${mainCat}</h2>
+        `;
+        mainSection.appendChild(mainTitle);
+
+        // จัดเรียง sub_office และสร้างกล่องแยกรายหน่วย
         const sortedSubCats = Object.keys(subOffices).sort((a, b) => getSubOfficeRank(a) - getSubOfficeRank(b));
 
         sortedSubCats.forEach(subCat => {
           const members = subOffices[subCat];
-          let memberRows = '';
-          
           members.sort((a, b) => (Number(a.rank_order) || 999) - (Number(b.rank_order) || 999));
 
+          let memberRows = '';
           members.forEach(member => {
             const avatarHtml = member.avatar_url 
               ? `<img src="${member.avatar_url}" class="w-11 h-11 rounded-full object-cover border border-slate-200 shrink-0">`
@@ -325,7 +325,7 @@
                  </div>`;
 
             memberRows += `
-              <div class="p-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 flex items-center justify-between gap-3 transition">
+              <div class="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 transition">
                 <div class="flex items-center gap-3 min-w-0">
                   ${avatarHtml}
                   <div class="min-w-0">
@@ -337,9 +337,9 @@
                     </div>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
+                <div class="flex items-center gap-1 shrink-0">
                   ${member.phone ? `
-                    <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 shadow-xs transition" title="โทรออกมือถือ">
+                    <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 transition shadow-xs" title="โทรออกมือถือ">
                       <i class="fa-solid fa-phone text-xs"></i>
                     </a>
                   ` : ''}
@@ -354,31 +354,28 @@
             `;
           });
 
-          subHtml += `
-            <details open class="border-t border-slate-200 first:border-0 group">
-              <summary class="bg-slate-50/80 px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition">
+          // กล่องการ์ดแยกของแต่ละ sub_office ชัดเจน
+          const subCard = document.createElement('div');
+          subCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
+          subCard.innerHTML = `
+            <details open class="group">
+              <summary class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition">
                 <div class="flex items-center gap-2">
-                  <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-0 -rotate-90 transition-transform"></i>
-                  <span class="text-xs font-bold text-slate-700">${subCat}</span>
-                  <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded-full font-semibold">${members.length}</span>
+                  <i class="fa-solid fa-building text-indigo-600 text-xs"></i>
+                  <span class="text-xs sm:text-sm font-bold text-slate-800">${subCat}</span>
+                  <span class="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">${members.length}</span>
                 </div>
+                <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-0 -rotate-90 transition-transform"></i>
               </summary>
-              <div class="divide-y divide-slate-100 bg-white">
+              <div class="divide-y divide-slate-100">
                 ${memberRows}
               </div>
             </details>
           `;
+          mainSection.appendChild(subCard);
         });
 
-        mainCard.innerHTML = `
-          <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
-            <h2 class="text-xs sm:text-sm font-bold tracking-wide flex items-center gap-2">
-              <i class="fa-solid fa-building text-indigo-400 text-xs"></i> ${mainCat}
-            </h2>
-          </div>
-          <div>${subHtml}</div>
-        `;
-        container.appendChild(mainCard);
+        container.appendChild(mainSection);
       });
     }
 
