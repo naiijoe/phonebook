@@ -104,7 +104,7 @@
         <div class="grid grid-cols-3 gap-2">
           <div class="col-span-2">
             <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงานย่อย / แผนก *</label>
-            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ยก.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <input type="text" id="sub_office" required placeholder="เช่น สน.ผบ.กร. หรือ ฝสธ.ประจำ ผบ.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">ลำดับ (ตัวเลข)</label>
@@ -119,7 +119,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">ตำแหน่ง</label>
-          <input type="text" id="position" placeholder="เช่น ผบ.กร., ประจำแผนก..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <input type="text" id="position" placeholder="เช่น ผบ.กร., ฝสธ.ประจำ ผบ.กร." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -151,22 +151,30 @@
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZmF5cHlsd2FpaXpwcnByZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDE0ODIsImV4cCI6MjEwMzg3NzQ4Mn0.kUl8Y8LVnBNDVClMRhH_49nrYsXFI_BnRE0ATeU7ORI";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // กำหนดลำดับมาตรฐานของแต่ละ sub_office ใน กร.
+    // กำหนดลำดับมาตรฐานของแต่ละ sub_office ใน กร. (รวม 1-10 ตามที่ระบุ)
     const SUB_OFFICE_ORDER = [
-      // 1-7: สำนักงานผู้บังคับบัญชาใน บก.กร.
+      // 1. สน.ผบ.กร.
       "สน.ผบ.กร.",
+      // 2. ฝสธ.ประจำ ผบ.กร.
+      "ฝสธ.ประจำ ผบ.กร.",
+      // 3. สน.รอง ผบ.กร. (1)
       "สน.รอง ผบ.กร. (1)",
       "สน.รอง ผบ.กร.(1)",
+      // 4. สน.รอง ผบ.กร.(2)
       "สน.รอง ผบ.กร. (2)",
       "สน.รอง ผบ.กร.(2)",
+      // 5. สน.เสธ.กร.
       "สน.เสธ.กร.",
+      // 6. สน.รอง เสธ.กร. (1)
       "สน.รอง เสธ.กร. (1)",
       "สน.รอง เสธ.กร.(1)",
+      // 7. สน.รอง เสธ.กร. (2)
       "สน.รอง เสธ.กร. (2)",
       "สน.รอง เสธ.กร.(2)",
+      // 8. นายพลเรือช่วยปฏิบัติราชการ
       "นายพลเรือช่วยปฏิบัติราชการ",
 
-      // 8: กองต่าง ๆ ใน บก.กร.
+      // 9. กองต่าง ๆ ใน บก.กร.
       "กพ.กร.",
       "ขว.กร.",
       "ยก.กร.",
@@ -182,7 +190,7 @@
       "ศปก.กร.",
       "สวัสดิการ กร.",
 
-      // 9: นขต.กร.
+      // 10. นขต.กร.
       "กตอ.กร.",
       "กฟก.1 กร.",
       "กฟก.2 กร.",
@@ -198,7 +206,6 @@
       "กอง สน.กร."
     ];
 
-    // ลำดับหน่วยงานหลัก (Main Categories)
     const MAIN_CAT_ORDER = [
       "สำนักงานผู้บังคับบัญชาใน บก.กร.",
       "ฝ่ายอำนวยการใน บก.กร.",
@@ -285,7 +292,6 @@
       }
       emptyState.classList.add('hidden');
 
-      // จัดกลุ่มข้อมูล
       const groups = {};
       filtered.forEach(item => {
         const mainCat = item.category || 'หน่วยงานทั่วไป';
@@ -295,7 +301,6 @@
         groups[mainCat][subCat].push(item);
       });
 
-      // เรียงลำดับหน่วยงานหลัก (Main Categories)
       const sortedMainCats = Object.keys(groups).sort((a, b) => getMainCatRank(a) - getMainCatRank(b));
 
       sortedMainCats.forEach(mainCat => {
@@ -304,15 +309,12 @@
         mainCard.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
         
         let subHtml = '';
-
-        // เรียงลำดับหน่วยงานย่อย (sub_office) ตามลิสต์มาตรฐานที่กำหนด
         const sortedSubCats = Object.keys(subOffices).sort((a, b) => getSubOfficeRank(a) - getSubOfficeRank(b));
 
         sortedSubCats.forEach(subCat => {
           const members = subOffices[subCat];
           let memberRows = '';
           
-          // เรียงรายชื่อคนในหน่วยตาม rank_order (1, 2, 3...)
           members.sort((a, b) => (Number(a.rank_order) || 999) - (Number(b.rank_order) || 999));
 
           members.forEach(member => {
@@ -335,7 +337,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="flex items-center gap-1 shrink-0">
+                <div class="flex items-center gap-1.5 shrink-0">
                   ${member.phone ? `
                     <a href="tel:${member.phone}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 active:scale-95 shadow-xs transition" title="โทรออกมือถือ">
                       <i class="fa-solid fa-phone text-xs"></i>
